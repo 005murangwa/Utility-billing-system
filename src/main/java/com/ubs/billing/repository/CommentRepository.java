@@ -25,7 +25,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     @Query("""
             SELECT c FROM Comment c
             WHERE c.bill.id = :billId
-              AND (:search IS NULL OR LOWER(c.comment) LIKE LOWER(CONCAT('%', :search, '%'))
+              AND (:search = '' OR LOWER(c.comment) LIKE LOWER(CONCAT('%', :search, '%'))
                    OR LOWER(c.user.username) LIKE LOWER(CONCAT('%', :search, '%')))
             """)
     Page<Comment> findByBillId(
@@ -37,7 +37,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
             SELECT c FROM Comment c
             WHERE (:billId IS NULL OR c.bill.id = :billId)
               AND (:customerId IS NULL OR c.bill.customer.id = :customerId)
-              AND (:search IS NULL OR LOWER(c.comment) LIKE LOWER(CONCAT('%', :search, '%'))
+              AND (:search = '' OR LOWER(c.comment) LIKE LOWER(CONCAT('%', :search, '%'))
                    OR LOWER(c.user.username) LIKE LOWER(CONCAT('%', :search, '%'))
                    OR LOWER(c.bill.billReference) LIKE LOWER(CONCAT('%', :search, '%')))
             """)

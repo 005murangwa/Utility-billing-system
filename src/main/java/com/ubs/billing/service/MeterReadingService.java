@@ -19,7 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
+import com.ubs.billing.util.SearchQueryUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -117,7 +117,7 @@ public class MeterReadingService {
             Pageable pageable) {
 
         Page<MeterReadingResponse> page = meterReadingRepository
-                .searchReadings(meterId, month, year, normalizeSearchParam(meterNumber), pageable)
+                .searchReadings(meterId, month, year, SearchQueryUtils.toOptionalLikePattern(meterNumber), pageable)
                 .map(MeterReadingMapper::toResponse);
 
         return PageResponse.from(page);
@@ -161,12 +161,5 @@ public class MeterReadingService {
     private MeterReading findReadingWithMeterOrThrow(Long id) {
         return meterReadingRepository.findByIdWithMeter(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Meter reading not found with id: " + id));
-    }
-
-    private String normalizeSearchParam(String value) {
-        if (!StringUtils.hasText(value)) {
-            return null;
-        }
-        return value.trim();
     }
 }

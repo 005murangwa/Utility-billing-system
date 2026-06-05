@@ -17,8 +17,8 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
             WHERE (:action IS NULL OR a.action = :action)
               AND (:entityName IS NULL OR a.entityName = :entityName)
               AND (:entityId IS NULL OR a.entityId = :entityId)
-              AND (:performedBy IS NULL OR LOWER(a.performedBy) LIKE LOWER(CONCAT('%', :performedBy, '%')))
-              AND (:search IS NULL OR LOWER(a.entityName) LIKE LOWER(CONCAT('%', :search, '%'))
+              AND (:performedBy = '' OR LOWER(a.performedBy) LIKE LOWER(CONCAT('%', :performedBy, '%')))
+              AND (:search = '' OR LOWER(a.entityName) LIKE LOWER(CONCAT('%', :search, '%'))
                    OR LOWER(a.performedBy) LIKE LOWER(CONCAT('%', :search, '%')))
             """)
     Page<AuditLog> searchAuditLogs(

@@ -123,6 +123,51 @@ public class UserService {
     }
 
     @Transactional
+    public void createCustomerUserIfAbsent(String fullName, String email, String phoneNumber) {
+        String normalizedEmail = email.trim().toLowerCase();
+        String normalizedPhone = PhoneUtils.normalizeRwandaPhone(phoneNumber);
+
+        if (userRepository.existsByEmail(normalizedEmail)) {
+            return;
+        }
+        if (userRepository.existsByPhoneNumber(normalizedPhone)) {
+            throw new ConflictException("Phone number already exists on another user account");
+        }
+
+        Role customerRole = roleRepository.findByName(Constants.ROLE_CUSTOMER)
+                .orElseThrow(() -> new ResourceNotFoundException("Default role not found: " + Constants.ROLE_CUSTOMER));
+
+        String temporaryPassword = TemporaryPasswordGenerator.generate();
+        String username = resolveUniqueUsername(normalizedEmail);
+
+        User user = User.builder()
+                .username(username)
+                .email(normalizedEmail)
+                .password(passwordEncoder.encode(temporaryPassword))
+                .fullName(fullName.trim())
+                .phoneNumber(normalizedPhone)
+                .emailVerified(true)
+                .enabled(true)
+                .firstLogin(true)
+                .build();
+
+        UserRole userRole = UserRole.builder()
+                .user(user)
+                .role(customerRole)
+                .build();
+        user.addUserRole(userRole);
+
+        User savedUser = userRepository.save(user);
+        emailService.sendCustomerWelcomeEmail(savedUser, temporaryPassword);
+        auditLogService.log(
+                AuditAction.CREATE,
+                AuditEntityNames.USER,
+                savedUser.getId(),
+                null,
+                AuditValueFormatter.formatRoles(Set.of(customerRole.getName())));
+    }
+
+    @Transactional
     public UserResponse updateUserRoles(Long id, UpdateUserRolesRequest request) {
         User user = userRepository.findByIdWithRoles(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));

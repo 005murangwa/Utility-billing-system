@@ -20,7 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
+import com.ubs.billing.util.SearchQueryUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -72,7 +72,7 @@ public class CommentService {
         Long scopedCustomerId = resolveCustomerIdForQuery(userDetails, customerId);
 
         Page<CommentResponse> page = commentRepository
-                .searchComments(billId, scopedCustomerId, normalizeSearchParam(search), pageable)
+                .searchComments(billId, scopedCustomerId, SearchQueryUtils.toOptionalLikePattern(search), pageable)
                 .map(comment -> {
                     if (isCustomerOnly(userDetails)) {
                         verifyBillAccess(comment.getBill(), userDetails);
@@ -92,7 +92,7 @@ public class CommentService {
         verifyBillAccess(bill, userDetails);
 
         Page<CommentResponse> page = commentRepository
-                .findByBillId(billId, normalizeSearchParam(search), pageable)
+                .findByBillId(billId, SearchQueryUtils.toOptionalLikePattern(search), pageable)
                 .map(CommentMapper::toResponse);
 
         return PageResponse.from(page);
@@ -141,12 +141,5 @@ public class CommentService {
             throw new ResourceNotFoundException("Authenticated user not found");
         }
         return userDetails;
-    }
-
-    private String normalizeSearchParam(String value) {
-        if (!StringUtils.hasText(value)) {
-            return null;
-        }
-        return value.trim();
     }
 }

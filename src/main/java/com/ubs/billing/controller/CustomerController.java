@@ -41,7 +41,7 @@ public class CustomerController {
     private final CustomerService customerService;
 
     @PostMapping
-    @Operation(summary = "Create customer", description = "Creates a new customer with unique national ID, email, and phone number")
+    @Operation(summary = "Create customer", description = "Creates a customer profile and, when no login exists yet, a customer user account with a temporary password email")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Customer created"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Validation error", content = @Content),

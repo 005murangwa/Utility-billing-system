@@ -6,6 +6,7 @@ import com.ubs.billing.validation.StrongPassword;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -34,6 +35,14 @@ public class RegisterRequest {
     @NotBlank(message = "Phone number is required")
     @RwandaPhone
     private String phoneNumber;
+
+    @NotBlank(message = "National ID is required")
+    @Pattern(regexp = "^\\d{16}$", message = "National ID must be exactly 16 digits")
+    private String nationalId;
+
+    @NotBlank(message = "Address is required")
+    @Size(max = 500, message = "Address must not exceed 500 characters")
+    private String address;
 
     @NotBlank(message = "Password is required")
     @StrongPassword

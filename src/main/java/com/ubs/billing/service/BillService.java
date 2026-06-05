@@ -23,6 +23,7 @@ import com.ubs.billing.security.CustomUserDetails;
 import com.ubs.billing.util.AuditEntityNames;
 import com.ubs.billing.util.BillCalculator;
 import com.ubs.billing.util.BillReferenceGenerator;
+import com.ubs.billing.util.PageableSortUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
@@ -34,6 +35,7 @@ import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -183,7 +185,7 @@ public class BillService {
                         month,
                         year,
                         status,
-                        normalizeSearchParam(billReference),
+                        normalizeBillReferenceSearch(billReference),
                         approved,
                         pageable)
                 .map(BillMapper::toResponse);
@@ -246,6 +248,13 @@ public class BillService {
     private String normalizeSearchParam(String value) {
         if (!StringUtils.hasText(value)) {
             return null;
+        }
+        return value.trim();
+    }
+
+    private String normalizeBillReferenceSearch(String value) {
+        if (!StringUtils.hasText(value)) {
+            return "";
         }
         return value.trim();
     }

@@ -83,7 +83,7 @@ public class PaymentService {
             Pageable pageable) {
 
         Page<PaymentResponse> page = paymentRepository
-                .searchPayments(billId, customerId, paymentMethod, normalizeSearchParam(billReference), pageable)
+                .searchPayments(billId, customerId, paymentMethod, normalizePaymentSearchParam(billReference), pageable)
                 .map(payment -> {
                     payment.getBill().getBillReference();
                     payment.getBill().getCustomer().getFullName();
@@ -144,6 +144,13 @@ public class PaymentService {
     private String normalizeSearchParam(String value) {
         if (!StringUtils.hasText(value)) {
             return null;
+        }
+        return value.trim();
+    }
+
+    private String normalizePaymentSearchParam(String value) {
+        if (!StringUtils.hasText(value)) {
+            return "";
         }
         return value.trim();
     }

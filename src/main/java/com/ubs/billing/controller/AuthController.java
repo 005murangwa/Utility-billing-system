@@ -41,7 +41,7 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    @Operation(summary = "Register a new customer account", description = "Creates an inactive account and sends an email verification OTP")
+    @Operation(summary = "Register a new customer account", description = "Creates a customer profile, an inactive login account, and sends an email verification OTP")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Registration accepted"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Validation error"),

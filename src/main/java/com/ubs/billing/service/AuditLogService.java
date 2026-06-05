@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import com.ubs.billing.util.SearchQueryUtils;
 import org.springframework.util.StringUtils;
 
 @Service
@@ -61,8 +62,8 @@ public class AuditLogService {
                         action,
                         normalizeSearchParam(entityName),
                         entityId,
-                        normalizeSearchParam(performedBy),
-                        normalizeSearchParam(search),
+                        SearchQueryUtils.toOptionalLikePattern(performedBy),
+                        SearchQueryUtils.toOptionalLikePattern(search),
                         pageable)
                 .map(AuditLogMapper::toResponse);
 

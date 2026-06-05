@@ -32,7 +32,7 @@ public interface MeterRepository extends JpaRepository<Meter, Long> {
 
     @Query("""
             SELECT m FROM Meter m
-            WHERE (:meterNumber IS NULL OR LOWER(m.meterNumber) LIKE LOWER(CONCAT('%', :meterNumber, '%')))
+            WHERE (:meterNumber = '' OR LOWER(m.meterNumber) LIKE LOWER(CONCAT('%', :meterNumber, '%')))
               AND (:meterType IS NULL OR m.meterType = :meterType)
               AND (:status IS NULL OR m.status = :status)
               AND (:customerId IS NULL OR m.customer.id = :customerId)
@@ -47,7 +47,7 @@ public interface MeterRepository extends JpaRepository<Meter, Long> {
     @Query("""
             SELECT m FROM Meter m
             WHERE m.customer.id = :customerId
-              AND (:meterNumber IS NULL OR LOWER(m.meterNumber) LIKE LOWER(CONCAT('%', :meterNumber, '%')))
+              AND (:meterNumber = '' OR LOWER(m.meterNumber) LIKE LOWER(CONCAT('%', :meterNumber, '%')))
               AND (:meterType IS NULL OR m.meterType = :meterType)
               AND (:status IS NULL OR m.status = :status)
             """)

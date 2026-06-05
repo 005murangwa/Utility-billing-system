@@ -7,6 +7,7 @@ import com.ubs.billing.dto.response.CustomerResponse;
 import com.ubs.billing.dto.response.PageResponse;
 import com.ubs.billing.entity.AuditAction;
 import com.ubs.billing.entity.Customer;
+import com.ubs.billing.entity.CustomerStatus;
 import com.ubs.billing.exception.ConflictException;
 import com.ubs.billing.exception.ResourceNotFoundException;
 import com.ubs.billing.repository.BillRepository;
@@ -29,6 +30,7 @@ public class CustomerService {
     private final MeterRepository meterRepository;
     private final BillRepository billRepository;
     private final AuditLogService auditLogService;
+    private final UserService userService;
 
     @Transactional
     public CustomerResponse createCustomer(CreateCustomerRequest request) {
@@ -49,7 +51,51 @@ public class CustomerService {
 
         Customer savedCustomer = customerRepository.save(customer);
         auditLogService.log(AuditAction.CREATE, AuditEntityNames.CUSTOMER, savedCustomer.getId());
+        userService.createCustomerUserIfAbsent(
+                savedCustomer.getFullName(),
+                savedCustomer.getEmail(),
+                savedCustomer.getPhoneNumber());
         return CustomerMapper.toResponse(savedCustomer);
+    }
+
+    @Transactional
+    public void createProfileForSelfRegistration(
+            String fullName,
+            String nationalId,
+            String email,
+            String phoneNumber,
+            String address) {
+
+        String normalizedEmail = normalizeEmail(email);
+        if (customerRepository.existsByEmail(normalizedEmail)) {
+            return;
+        }
+
+        String normalizedPhone = PhoneUtils.normalizeRwandaPhone(phoneNumber);
+        String normalizedNationalId = nationalId.trim();
+        validateUniqueFields(normalizedNationalId, normalizedEmail, normalizedPhone, null);
+
+        Customer customer = Customer.builder()
+                .fullName(fullName.trim())
+                .nationalId(normalizedNationalId)
+                .email(normalizedEmail)
+                .phoneNumber(normalizedPhone)
+                .address(address.trim())
+                .status(CustomerStatus.INACTIVE)
+                .build();
+
+        Customer savedCustomer = customerRepository.save(customer);
+        auditLogService.log(AuditAction.CREATE, AuditEntityNames.CUSTOMER, savedCustomer.getId());
+    }
+
+    @Transactional
+    public void activateProfileForEmail(String email) {
+        customerRepository.findByEmail(normalizeEmail(email)).ifPresent(customer -> {
+            if (CustomerStatus.ACTIVE != customer.getStatus()) {
+                customer.setStatus(CustomerStatus.ACTIVE);
+                customerRepository.save(customer);
+            }
+        });
     }
 
     @Transactional
@@ -110,9 +156,9 @@ public class CustomerService {
             String email,
             Pageable pageable) {
 
-        String searchName = normalizeSearchParam(fullName);
-        String searchNationalId = normalizeSearchParam(nationalId);
-        String searchEmail = normalizeSearchParam(email);
+        String searchName = normalizeCustomerSearchParam(fullName);
+        String searchNationalId = normalizeCustomerSearchParam(nationalId);
+        String searchEmail = normalizeCustomerSearchParam(email);
 
         if (StringUtils.hasText(searchEmail)) {
             searchEmail = searchEmail.toLowerCase();
@@ -142,9 +188,15 @@ public class CustomerService {
     private void validateUniqueFields(String nationalId, String email, String phoneNumber, Long excludeId) {
         if (excludeId == null) {
             if (customerRepository.existsByNationalId(nationalId)) {
+                customerRepository.findByNationalId(nationalId).ifPresent(existing ->
+                        throwConflict("National ID " + nationalId + " is already used by customer "
+                                + existing.getEmail() + " (id " + existing.getId() + ")"));
                 throw new ConflictException("Customer with this national ID already exists");
             }
             if (customerRepository.existsByEmail(email)) {
+                customerRepository.findByEmail(email).ifPresent(existing ->
+                        throwConflict("Customer profile already exists for " + email
+                                + " (id " + existing.getId() + "). No need to create it again."));
                 throw new ConflictException("Customer with this email already exists");
             }
             if (customerRepository.existsByPhoneNumber(phoneNumber)) {
@@ -173,5 +225,16 @@ public class CustomerService {
             return null;
         }
         return value.trim();
+    }
+
+    private String normalizeCustomerSearchParam(String value) {
+        if (!StringUtils.hasText(value)) {
+            return "";
+        }
+        return value.trim();
+    }
+
+    private void throwConflict(String message) {
+        throw new ConflictException(message);
     }
 }

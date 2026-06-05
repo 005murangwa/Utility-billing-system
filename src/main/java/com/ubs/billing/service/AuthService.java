@@ -48,6 +48,7 @@ public class AuthService {
     private final RefreshTokenService refreshTokenService;
     private final JwtBlacklistService jwtBlacklistService;
     private final UserService userService;
+    private final CustomerService customerService;
 
     @Transactional
     public RegisterResponse register(RegisterRequest request) {
@@ -86,6 +87,12 @@ public class AuthService {
         user.addUserRole(userRole);
 
         User savedUser = userRepository.save(user);
+        customerService.createProfileForSelfRegistration(
+                request.getFullName(),
+                request.getNationalId(),
+                email,
+                phoneNumber,
+                request.getAddress());
         otpService.createAndSendOtp(savedUser, OtpType.EMAIL_VERIFICATION);
 
         return RegisterResponse.builder()
@@ -110,6 +117,7 @@ public class AuthService {
         user.setEmailVerified(true);
         user.setEnabled(true);
         userRepository.save(user);
+        customerService.activateProfileForEmail(email);
 
         return MessageResponse.builder()
                 .message("Email verified successfully. Your account is now active. You may log in.")
@@ -133,7 +141,7 @@ public class AuthService {
                 .build();
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public AuthResponse login(LoginRequest request) {
         String identifier = resolveLoginIdentifier(request);
         User user = findUserByEmailOrUsername(identifier)

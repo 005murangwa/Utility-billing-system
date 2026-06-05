@@ -27,7 +27,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
             WHERE (:billId IS NULL OR p.bill.id = :billId)
               AND (:customerId IS NULL OR p.bill.customer.id = :customerId)
               AND (:paymentMethod IS NULL OR p.paymentMethod = :paymentMethod)
-              AND (:billReference IS NULL OR LOWER(p.bill.billReference) LIKE LOWER(CONCAT('%', :billReference, '%')))
+              AND (:billReference = '' OR LOWER(p.bill.billReference) LIKE LOWER(CONCAT('%', :billReference, '%')))
             """)
     Page<Payment> searchPayments(
             @Param("billId") Long billId,

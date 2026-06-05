@@ -45,6 +45,14 @@ public class EmailService {
         );
     }
 
+    public void sendCustomerWelcomeEmail(User user, String temporaryPassword) {
+        sendEmail(
+                user,
+                "Your Utility Billing System customer account",
+                buildCustomerWelcomeEmailBody(user, temporaryPassword)
+        );
+    }
+
     public void sendRoleChangeEmail(User user, Collection<String> roles) {
         sendEmail(
                 user,
@@ -123,6 +131,41 @@ public class EmailService {
                 Regards,
                 Utility Billing System Team
                 """.formatted(displayName, otpCode, mailProperties.getBaseUrl());
+    }
+
+    private String buildCustomerWelcomeEmailBody(User user, String temporaryPassword) {
+        String displayName = user.getFullName() != null ? user.getFullName() : user.getUsername();
+        return """
+                Hello %s,
+
+                An administrator has registered you as a Utility Billing System customer.
+
+                Full Name: %s
+                Email: %s
+                Temporary Password: %s
+
+                Login instructions:
+                1. Sign in at %s/api/auth/login using your email and temporary password.
+                2. You will be required to change your password before accessing customer endpoints.
+                3. Use POST %s/api/auth/change-temporary-password after login.
+
+                After signing in, view your bills at %s/api/my/bills
+
+                Security notice:
+                - Do not share your temporary password.
+                - Change it immediately on first login.
+                - Contact your administrator if you did not expect this account.
+
+                Regards,
+                Utility Billing System Team
+                """.formatted(
+                displayName,
+                displayName,
+                user.getEmail(),
+                temporaryPassword,
+                mailProperties.getBaseUrl(),
+                mailProperties.getBaseUrl(),
+                mailProperties.getBaseUrl());
     }
 
     private String buildStaffWelcomeEmailBody(User user, String temporaryPassword, String roleName) {

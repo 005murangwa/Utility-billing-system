@@ -20,7 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
+import com.ubs.billing.util.SearchQueryUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -92,7 +92,7 @@ public class MeterService {
 
         Page<MeterResponse> page = meterRepository
                 .searchMeters(
-                        normalizeSearchParam(meterNumber),
+                        SearchQueryUtils.toOptionalLikePattern(meterNumber),
                         meterType,
                         status,
                         customerId,
@@ -115,7 +115,7 @@ public class MeterService {
         Page<MeterResponse> page = meterRepository
                 .findByCustomerId(
                         customerId,
-                        normalizeSearchParam(meterNumber),
+                        SearchQueryUtils.toOptionalLikePattern(meterNumber),
                         meterType,
                         status,
                         pageable)
@@ -159,12 +159,5 @@ public class MeterService {
         if (exists) {
             throw new ConflictException("Meter with this meter number already exists");
         }
-    }
-
-    private String normalizeSearchParam(String value) {
-        if (!StringUtils.hasText(value)) {
-            return null;
-        }
-        return value.trim();
     }
 }

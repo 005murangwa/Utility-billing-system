@@ -56,7 +56,7 @@ public interface BillRepository extends JpaRepository<Bill, Long> {
               AND (:month IS NULL OR b.month = :month)
               AND (:year IS NULL OR b.year = :year)
               AND (:status IS NULL OR b.status = :status)
-              AND (:billReference IS NULL OR LOWER(b.billReference) LIKE LOWER(CONCAT('%', :billReference, '%')))
+              AND (:billReference = '' OR LOWER(b.billReference) LIKE LOWER(CONCAT('%', :billReference, '%')))
               AND (:approved IS NULL OR b.approved = :approved)
             """)
     Page<Bill> searchBills(

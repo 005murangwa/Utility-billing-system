@@ -31,9 +31,9 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
 
     @Query("""
             SELECT c FROM Customer c
-            WHERE (:fullName IS NULL OR LOWER(c.fullName) LIKE LOWER(CONCAT('%', :fullName, '%')))
-              AND (:nationalId IS NULL OR LOWER(c.nationalId) LIKE LOWER(CONCAT('%', :nationalId, '%')))
-              AND (:email IS NULL OR LOWER(c.email) LIKE LOWER(CONCAT('%', :email, '%')))
+            WHERE (:fullName = '' OR LOWER(c.fullName) LIKE LOWER(CONCAT('%', :fullName, '%')))
+              AND (:nationalId = '' OR LOWER(c.nationalId) LIKE LOWER(CONCAT('%', :nationalId, '%')))
+              AND (:email = '' OR LOWER(c.email) LIKE LOWER(CONCAT('%', :email, '%')))
             """)
     Page<Customer> searchCustomers(
             @Param("fullName") String fullName,

@@ -30,7 +30,7 @@ public interface MeterReadingRepository extends JpaRepository<MeterReading, Long
             WHERE (:meterId IS NULL OR mr.meter.id = :meterId)
               AND (:month IS NULL OR mr.month = :month)
               AND (:year IS NULL OR mr.year = :year)
-              AND (:meterNumber IS NULL OR LOWER(mr.meter.meterNumber) LIKE LOWER(CONCAT('%', :meterNumber, '%')))
+              AND (:meterNumber = '' OR LOWER(mr.meter.meterNumber) LIKE LOWER(CONCAT('%', :meterNumber, '%')))
             """)
     Page<MeterReading> searchReadings(
             @Param("meterId") Long meterId,
