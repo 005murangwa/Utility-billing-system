@@ -1,0 +1,16 @@
+# Copy this file to application-local.properties (same folder).
+# application-local.properties is gitignored — never commit real passwords.
+
+# Use 8081 if port 8080 is taken (e.g. Apache httpd)
+server.port=8081
+app.mail.base-url=http://localhost:8081
+
+# Use 5433 if you have PostgreSQL 18 alongside 16 on 5432 (common on Windows)
+spring.datasource.url=jdbc:postgresql://127.0.0.1:5433/javat
+spring.datasource.username=postgres
+spring.datasource.password=your_password_here
+
+# Optional overrides
+# app.jwt.secret=<output of: openssl rand -base64 32>
+# spring.mail.username=your-email@gmail.com
+# spring.mail.password=your-app-password

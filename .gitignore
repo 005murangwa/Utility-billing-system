@@ -1,0 +1,10 @@
+target/
+src/main/resources/application-local.properties
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+.vscode/
+*.log
+.DS_Store

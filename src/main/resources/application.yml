@@ -1,0 +1,74 @@
+spring:
+  application:
+    name: utility-billing-system
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ubs_db
+    username: ubs_user
+    password: ubs_password
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${SPRING_MAIL_USERNAME:}
+    password: ${SPRING_MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+    refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}
+  otp:
+    expiration-minutes: ${OTP_EXPIRATION_MINUTES:10}
+    length: ${OTP_LENGTH:6}
+  password-reset:
+    token-expiration-minutes: ${PASSWORD_RESET_TOKEN_EXPIRATION_MINUTES:15}
+  mail:
+    base-url: ${APP_MAIL_BASE_URL:http://localhost:8080}
+    from: ${APP_MAIL_FROM:no-reply@ubs.example.com}
+  billing:
+    due-days: ${BILLING_DUE_DAYS:30}
+    overdue-disconnect-days: ${BILLING_OVERDUE_DISCONNECT_DAYS:60}
+    overdue-cron: ${BILLING_OVERDUE_CRON:0 0 1 * * *}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+
+logging:
+  level:
+    com.ubs.billing: INFO
+    org.springframework.security: WARN
