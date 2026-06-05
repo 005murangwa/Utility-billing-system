@@ -41,6 +41,17 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class BillService {
 
+    private static final Set<String> ALLOWED_BILL_SORT_FIELDS = Set.of(
+            "generatedDate",
+            "totalAmount",
+            "balance",
+            "status",
+            "month",
+            "year",
+            "createdAt",
+            "billReference"
+    );
+
     private final BillRepository billRepository;
     private final MeterReadingService meterReadingService;
     private final CustomerService customerService;
@@ -178,6 +189,8 @@ public class BillService {
             Boolean approved,
             Pageable pageable) {
 
+        Pageable safePageable = PageableSortUtils.withAllowedSort(pageable, ALLOWED_BILL_SORT_FIELDS, "generatedDate");
+
         Page<BillResponse> page = billRepository
                 .searchBills(
                         customerId,
@@ -187,7 +200,7 @@ public class BillService {
                         status,
                         normalizeBillReferenceSearch(billReference),
                         approved,
-                        pageable)
+                        safePageable)
                 .map(BillMapper::toResponse);
 
         return PageResponse.from(page);

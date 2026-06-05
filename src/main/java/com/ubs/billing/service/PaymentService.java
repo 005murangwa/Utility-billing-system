@@ -17,6 +17,7 @@ import com.ubs.billing.repository.BillRepository;
 import com.ubs.billing.repository.PaymentRepository;
 import com.ubs.billing.util.AuditEntityNames;
 import com.ubs.billing.util.BillPaymentUpdater;
+import com.ubs.billing.util.PageableSortUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -37,6 +38,12 @@ public class PaymentService {
             BillStatus.APPROVED,
             BillStatus.PARTIALLY_PAID,
             BillStatus.OVERDUE
+    );
+
+    private static final Set<String> ALLOWED_PAYMENT_SORT_FIELDS = Set.of(
+            "paymentDate",
+            "amountPaid",
+            "createdAt"
     );
 
     private final PaymentRepository paymentRepository;
@@ -82,8 +89,10 @@ public class PaymentService {
             String billReference,
             Pageable pageable) {
 
+        Pageable safePageable = PageableSortUtils.withAllowedSort(pageable, ALLOWED_PAYMENT_SORT_FIELDS, "paymentDate");
+
         Page<PaymentResponse> page = paymentRepository
-                .searchPayments(billId, customerId, paymentMethod, normalizePaymentSearchParam(billReference), pageable)
+                .searchPayments(billId, customerId, paymentMethod, normalizePaymentSearchParam(billReference), safePageable)
                 .map(payment -> {
                     payment.getBill().getBillReference();
                     payment.getBill().getCustomer().getFullName();
