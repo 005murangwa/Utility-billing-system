@@ -93,4 +93,14 @@ public class PaymentController {
         PageResponse<PaymentResponse> response = paymentService.getCustomerPaymentHistory(customerId, pageable);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
+
+    @PostMapping("/bills/{billId}/send-paid-receipt")
+    @Operation(
+            summary = "Send paid receipt email",
+            description = "Sends a payment confirmation email to the customer for a fully paid bill."
+    )
+    public ResponseEntity<ApiResponse<Void>> sendPaidReceiptEmail(@PathVariable Long billId) {
+        paymentService.sendPaidReceiptEmail(billId);
+        return ResponseEntity.ok(ApiResponse.success("Paid receipt email sent"));
+    }
 }

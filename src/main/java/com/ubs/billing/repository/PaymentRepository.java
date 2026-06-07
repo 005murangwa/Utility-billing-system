@@ -35,4 +35,13 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
             @Param("paymentMethod") PaymentMethod paymentMethod,
             @Param("billReference") String billReference,
             Pageable pageable);
+
+    @Query("""
+            SELECT p FROM Payment p
+            JOIN FETCH p.bill b
+            JOIN FETCH b.customer
+            WHERE b.id = :billId
+            ORDER BY p.paymentDate DESC, p.id DESC
+            """)
+    java.util.List<Payment> findLatestByBillId(@Param("billId") Long billId, Pageable pageable);
 }

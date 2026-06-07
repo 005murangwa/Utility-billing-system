@@ -82,5 +82,6 @@ public abstract class AbstractSmokeTest {
         doNothing().when(emailService).sendPasswordResetOtpEmail(any(User.class), anyString());
         doNothing().when(emailService).sendRoleChangeEmail(any(User.class), any());
         doNothing().when(emailService).sendBillApprovedEmail(any(User.class), any());
+        doNothing().when(emailService).sendBillPaidEmail(any(), any());
     }
 }

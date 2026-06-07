@@ -20,6 +20,7 @@ import com.ubs.billing.util.BillPaymentUpdater;
 import com.ubs.billing.util.PageableSortUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -50,6 +51,7 @@ public class PaymentService {
     private final BillRepository billRepository;
     private final CustomerService customerService;
     private final AuditLogService auditLogService;
+    private final EmailService emailService;
 
     @Transactional
     public PaymentResponse createPayment(CreatePaymentRequest request) {
@@ -70,6 +72,10 @@ public class PaymentService {
         billRepository.save(bill);
         Payment savedPayment = paymentRepository.save(payment);
         auditLogService.log(AuditAction.CREATE, AuditEntityNames.PAYMENT, savedPayment.getId());
+
+        if (bill.getStatus() == BillStatus.PAID) {
+            emailService.sendBillPaidEmail(bill, savedPayment);
+        }
 
         return PaymentMapper.toResponse(
                 paymentRepository.findByIdWithDetails(savedPayment.getId())
@@ -112,6 +118,22 @@ public class PaymentService {
     public PageResponse<PaymentResponse> getCurrentCustomerPayments(Pageable pageable) {
         Customer customer = resolveCustomerForCurrentUser();
         return getPayments(null, customer.getId(), null, null, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public void sendPaidReceiptEmail(Long billId) {
+        Bill bill = billRepository.findByIdWithDetails(billId)
+                .orElseThrow(() -> new ResourceNotFoundException("Bill not found with id: " + billId));
+
+        if (bill.getStatus() != BillStatus.PAID) {
+            throw new BadRequestException("Paid receipt email can only be sent for fully paid bills");
+        }
+
+        Payment payment = paymentRepository.findLatestByBillId(billId, PageRequest.of(0, 1)).stream()
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("No payment found for bill id: " + billId));
+
+        emailService.sendBillPaidEmail(bill, payment);
     }
 
     private Customer resolveCustomerForCurrentUser() {

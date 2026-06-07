@@ -2,6 +2,8 @@ package com.ubs.billing.service;
 
 import com.ubs.billing.config.MailProperties;
 import com.ubs.billing.entity.Bill;
+import com.ubs.billing.entity.Customer;
+import com.ubs.billing.entity.Payment;
 import com.ubs.billing.entity.User;
 import com.ubs.billing.exception.BadRequestException;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +12,7 @@ import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.Collection;
 
@@ -73,6 +76,27 @@ public class EmailService {
         );
     }
 
+    public void sendBillPaidEmail(Bill bill, Payment payment) {
+        Customer customer = bill.getCustomer();
+        if (customer == null || !StringUtils.hasText(customer.getEmail())) {
+            log.warn("Skipping bill paid email because customer email is missing for bill {}", bill.getId());
+            return;
+        }
+        String displayName = StringUtils.hasText(customer.getFullName())
+                ? customer.getFullName()
+                : customer.getEmail();
+        sendEmailToAddressSafely(
+                customer.getEmail(),
+                "Your utility bill payment has been received",
+                buildBillPaidEmailBody(displayName, bill, payment)
+        );
+    }
+
+    /** @deprecated use {@link #sendBillPaidEmail(Bill, Payment)} */
+    public void sendBillPaidEmail(User user, Bill bill, Payment payment) {
+        sendBillPaidEmail(bill, payment);
+    }
+
     private void sendEmail(User user, String subject, String body) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(mailProperties.getFrom());
@@ -93,7 +117,23 @@ public class EmailService {
         try {
             sendEmail(user, subject, body);
         } catch (BadRequestException ex) {
-            log.warn("Bill approval email delivery failed for {}: {}", user.getEmail(), ex.getMessage());
+            log.warn("Email delivery failed for {} (subject: {}): {}", user.getEmail(), subject, ex.getMessage());
+        }
+    }
+
+    private void sendEmailToAddressSafely(String toEmail, String subject, String body) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(mailProperties.getFrom());
+        message.setTo(toEmail.trim().toLowerCase());
+        message.setSubject(subject);
+        message.setText(body);
+
+        try {
+            mailSender.send(message);
+            log.info("Email sent to {} with subject '{}'", toEmail, subject);
+        } catch (MailException ex) {
+            log.error("Failed to send email to {}", toEmail, ex);
+            log.warn("Email delivery failed for {} (subject: {}): {}", toEmail, subject, ex.getMessage());
         }
     }
 
@@ -248,6 +288,30 @@ public class EmailService {
                 bill.getBillReference(),
                 bill.getTotalAmount(),
                 dueDateText,
+                mailProperties.getBaseUrl());
+    }
+
+    private String buildBillPaidEmailBody(String displayName, Bill bill, Payment payment) {
+        return """
+                Hello %s,
+
+                We have received your payment for utility bill %s.
+
+                Amount paid: %s FRW
+                Payment method: %s
+                Payment date: %s
+                Bill status: PAID
+
+                View your payment history at %s/api/my/payments
+
+                Regards,
+                Utility Billing System Team
+                """.formatted(
+                displayName,
+                bill.getBillReference(),
+                payment.getAmountPaid(),
+                payment.getPaymentMethod(),
+                payment.getPaymentDate(),
                 mailProperties.getBaseUrl());
     }
 }
